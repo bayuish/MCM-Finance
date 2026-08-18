@@ -318,6 +318,12 @@ const DataPembiayaanPage: React.FC = () => {
             <Clock className="h-3 w-3 text-amber-600 animate-pulse" /> Pending ACC Owner
           </span>
         );
+      case "ACC (Siap Cair)":
+        return (
+          <span className="status-badge bg-blue-50 text-blue-800 border border-blue-300 whitespace-nowrap inline-flex items-center shrink-0">
+            <CheckCircle2 className="h-3 w-3 text-blue-600" /> ACC (Siap Cair)
+          </span>
+        );
       case "Lunas":
         return (
           <span className="status-badge status-badge-lunas whitespace-nowrap inline-flex items-center shrink-0">
@@ -353,7 +359,7 @@ const DataPembiayaanPage: React.FC = () => {
     }
   };
 
-  // Owner approval handler (ACC Pembiayaan -> Status becomes "Aktif")
+  // Owner approval handler (ACC Pembiayaan -> Status becomes "ACC (Siap Cair)")
   const handleApproveTransaction = (nomorPembiayaan: string) => {
     const target = pembiayaanList.find((p) => p.nomorPembiayaan === nomorPembiayaan);
     if (target) {
@@ -415,7 +421,7 @@ const DataPembiayaanPage: React.FC = () => {
       jenisPembayaran: revJenisPembayaran,
       angsuranPerPeriode: calculatedAngsuran,
       sisaTagihan: calculatedTotalTagihan,
-      status: "Aktif",
+      status: "ACC (Siap Cair)",
       disetujuiDenganPenyesuaian: isModified,
       pokokAwalPengajuan: reviewContract.pokokAwalPengajuan || reviewContract.jumlahPokok,
       marginAwalPengajuan: reviewContract.marginAwalPengajuan || reviewContract.persenMargin,

@@ -179,7 +179,42 @@ export interface Peminjam {
 }
 
 export type JenisPembayaran = "Bunga 15 Hari" | "Sekali bayar" | "Harian" | "Mingguan" | "Bulanan";
-export type StatusPembiayaan = "Pending ACC" | "Aktif" | "Lunas" | "Segera jatuh tempo" | "Terlambat" | "Ditolak";
+export type StatusPembiayaan = "Pending ACC" | "ACC (Siap Cair)" | "Aktif" | "Lunas" | "Segera jatuh tempo" | "Terlambat" | "Ditolak";
+
+export type JenisJaminanType = "Handphone / Gadget" | "BPKB Kendaraan" | "Sertifikat / Lainnya";
+
+export interface DetailHandphone {
+  merk: string; // e.g. Apple, Samsung, Xiaomi, Oppo, Vivo
+  tipe: string; // e.g. iPhone 15 Pro Max 256GB
+  kondisi: string; // e.g. Mulus 98%, Normal tanpa Kendala
+  kelengkapan: string[]; // e.g. ["Dus Original", "Charger Fast Charging", "Nota Pembelian"]
+  fotoHp: string[];
+}
+
+export interface DetailBPKB {
+  jenisKendaraan: "Mobil" | "Motor";
+  merkModel: string; // e.g. Toyota Avanza 1.5 G MT 2023
+  nomorPolisi: string; // e.g. DD 1234 AB
+  nomorBpkb: string; // e.g. BPKB-987654321
+  nomorRangkaMesin?: string;
+  fotoBpkb: string;
+  fotoKendaraan?: string;
+}
+
+export interface DataJaminan {
+  idJaminan: string; // e.g. JMN-20260818-001
+  jenisJaminan: JenisJaminanType;
+  handphoneDetails?: DetailHandphone;
+  bpkbDetails?: DetailBPKB;
+  deskripsiLainnya?: string;
+  lokasiPenyimpanan: string; // e.g. Brankas Kasir Utama A-1, Gudang Agunan B-2
+  statusJaminan: "Tersimpan di Brankas" | "Siap Ambil (Lunas)" | "Sudah Diambil Peminjam";
+  tanggalDiterima: string;
+  tanggalPengambilan?: string;
+  petugasPenerima: string;
+  penerimaPengambilan?: string; // Nama nasabah saat serah terima pengambilan kembali
+  catatanAgunan?: string;
+}
 
 export interface AdminOfficer {
   idAdmin: string; // e.g. ADM-MCM-001
@@ -232,6 +267,9 @@ export interface TransaksiPembiayaan {
   status: StatusPembiayaan;
   deskripsiJaminan?: string; // e.g. BPKB Motor Honda Vario 2023
   fotoJaminan?: string; // Image URL / preview base64
+  dataJaminan?: DataJaminan; // Detailed structured collateral details
+  tanggalCairDiproses?: string;
+  petugasPencairan?: string;
   adminPenanggungJawab?: string; // e.g. H. Andi Pratama, S.E.
   cabangAdmin?: string; // e.g. Cabang Pusat Pettarani Makassar
   catatanOwner?: string; // Catatan persetujuan / revisi dari Owner
@@ -503,6 +541,33 @@ export const INITIAL_PEMINJAM_DATA: Peminjam[] = [
 
 // 6. Central Loan Transactions (Data Pembiayaan)
 export const INITIAL_PEMBIAYAAN_DATA: TransaksiPembiayaan[] = [
+  {
+    nomorPembiayaan: "PB-2026-007",
+    idPeminjam: "PEM-003",
+    namaPeminjam: "Siti Rahmawati",
+    whatsappPeminjam: "+62 852-1122-3344",
+    nikPeminjam: "7371034511940002",
+    pekerjaanPeminjam: "Karyawan Swasta",
+    tanggalPencairan: "18 Agt 2026",
+    jumlahPokok: 12000000,
+    persenMargin: 15,
+    biayaMargin: 1800000,
+    totalTagihan: 13800000,
+    tenor: 1,
+    jenisPembayaran: "Bunga 15 Hari",
+    tanggalJatuhTempo: "02 Sep 2026",
+    angsuranPerPeriode: 1800000,
+    sisaTagihan: 12000000,
+    sisaPokok: 12000000,
+    bungaPer15Hari: 1800000,
+    periodeSiklusHari: 15,
+    status: "ACC (Siap Cair)",
+    deskripsiJaminan: "iPhone 15 Pro 256GB Deep Purple (SN: C02F9081MD6M)",
+    fotoJaminan: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=400&auto=format&fit=crop&q=80",
+    adminPenanggungJawab: "Siti Rahmawati, A.Md.",
+    cabangAdmin: "Cabang Panakkukang Makassar",
+    catatanOwner: "Disetujui (ACC) oleh Owner pada 18 Agt 2026. Siap dilakukan pencairan & penyerahan jaminan oleh Admin.",
+  },
   {
     nomorPembiayaan: "PB-2026-006",
     idPeminjam: "PEM-005",

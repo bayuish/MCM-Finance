@@ -11,7 +11,8 @@ import {
   Sparkles,
   Users,
   Receipt,
-  MapPin
+  MapPin,
+  Landmark
 } from "lucide-react";
 
 interface SidebarProps {
@@ -24,6 +25,7 @@ const ICON_MAP: Record<string, React.FC<{ className?: string }>> = {
   LayoutDashboard: (props) => <LayoutDashboard {...props} />,
   Users: (props) => <Users {...props} />,
   Receipt: (props) => <Receipt {...props} />,
+  Landmark: (props) => <Landmark {...props} />,
   MapPin: (props) => <MapPin {...props} />,
   Crown: (props) => <Crown {...props} />,
   ShieldAlert: (props) => <ShieldAlert {...props} />,

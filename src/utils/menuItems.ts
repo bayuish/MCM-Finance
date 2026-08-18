@@ -23,6 +23,13 @@ export const menuItems: MenuItem[] = [
     role: "all",
   },
   {
+    id: "pencairan",
+    name: "Pencairan & Jaminan",
+    icon: "Landmark",
+    link: "/pencairan",
+    role: "all",
+  },
+  {
     id: "persebaran",
     name: "Peta Persebaran (GIS)",
     icon: "MapPin",
