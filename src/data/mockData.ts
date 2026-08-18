@@ -273,6 +273,11 @@ export interface TransaksiPembiayaan {
   dataJaminan?: DataJaminan; // Detailed structured collateral details
   tanggalCairDiproses?: string;
   petugasPencairan?: string;
+  metodePencairan?: string; // e.g. "Transfer Bank", "Cash / Tunai di Kasir"
+  bankTujuan?: string; // e.g. "Bank BCA", "Bank Mandiri", "Bank BRI"
+  nomorRekeningTujuan?: string; // e.g. "1234567890"
+  atasNamaRekeningTujuan?: string; // e.g. "Budi Santoso"
+  potonganBiayaAdmin?: number; // e.g. 50000
   adminPenanggungJawab?: string; // e.g. H. Andi Pratama, S.E.
   cabangAdmin?: string; // e.g. Cabang Pusat Pettarani Makassar
   catatanOwner?: string; // Catatan persetujuan / revisi dari Owner

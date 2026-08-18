@@ -40,6 +40,7 @@ import {
   QrCode,
   Gift,
   CheckCheck,
+  CreditCard,
 } from "lucide-react";
 
 const PencairanPage: React.FC = () => {
@@ -96,7 +97,10 @@ const PencairanPage: React.FC = () => {
 
   // --- FORM STATES FOR PENCAIRAN & JAMINAN ---
   const [tanggalCair, setTanggalCair] = useState<string>(new Date().toISOString().split("T")[0]);
-  const [metodeCair, setMetodeCair] = useState<string>("Transfer BCA");
+  const [metodeCair, setMetodeCair] = useState<string>("Transfer Bank");
+  const [bankTujuan, setBankTujuan] = useState<string>("Bank BCA");
+  const [noRekeningTujuan, setNoRekeningTujuan] = useState<string>("7371029841");
+  const [atasNamaRekeningTujuan, setAtasNamaRekeningTujuan] = useState<string>("");
   const [potonganAdmin, setPotonganAdmin] = useState<string>("50.000");
 
   const [jenisJaminan, setJenisJaminan] = useState<JenisJaminanType>("Handphone / Gadget");
@@ -131,6 +135,11 @@ const PencairanPage: React.FC = () => {
   const handleOpenProcessModal = (contract: TransaksiPembiayaan) => {
     setSelectedContract(contract);
     setTanggalCair(new Date().toISOString().split("T")[0]);
+    setMetodeCair(contract.metodePencairan || "Transfer Bank");
+    setBankTujuan(contract.bankTujuan || "Bank BCA");
+    setNoRekeningTujuan(contract.nomorRekeningTujuan || "7371029841");
+    setAtasNamaRekeningTujuan(contract.atasNamaRekeningTujuan || contract.namaPeminjam);
+    setPotonganAdmin(contract.potonganBiayaAdmin ? String(contract.potonganBiayaAdmin) : "50.000");
 
     // Pre-fill form if existing collateral data exists
     if (contract.deskripsiJaminan?.toLowerCase().includes("bpkb")) {
@@ -267,6 +276,11 @@ const PencairanPage: React.FC = () => {
       tanggalPencairan: tanggalCair,
       tanggalCairDiproses: tanggalCair,
       petugasPencairan: adminOfficer,
+      metodePencairan: metodeCair,
+      bankTujuan: metodeCair === "Cash / Tunai di Kasir" ? undefined : bankTujuan,
+      nomorRekeningTujuan: metodeCair === "Cash / Tunai di Kasir" ? undefined : noRekeningTujuan,
+      atasNamaRekeningTujuan: metodeCair === "Cash / Tunai di Kasir" ? undefined : (atasNamaRekeningTujuan || selectedContract.namaPeminjam),
+      potonganBiayaAdmin: Number(potonganAdmin.replace(/\D/g, "")) || 50000,
       deskripsiJaminan: deskripsiJaminanFinal,
       fotoJaminan: fotoJaminanFinal,
       dataJaminan: dataJaminanObj,
@@ -629,15 +643,30 @@ const PencairanPage: React.FC = () => {
                                 <FileCheck className="h-3 w-3 text-amber-400" /> 2. Struk Tanda Terima
                               </button>
                               <button
-                                onClick={() => handleOpenReceiptModal(item, "pengambilan")}
-                                className={`px-2.5 py-1 text-[10px] font-bold text-white rounded shadow transition-all flex items-center justify-center gap-1 ${
+                                disabled={!isLunas}
+                                onClick={() => {
+                                  if (!isLunas) {
+                                    alert("🔒 AKSI DITOLAK: Struk Pengambilan Jaminan HANYA dapat dicetak apabila status pembayaran di sistem telah LUNAS 100% (Siap Ambil / Lunas).");
+                                    return;
+                                  }
+                                  handleOpenReceiptModal(item, "pengambilan");
+                                }}
+                                className={`px-2.5 py-1 text-[10px] font-bold rounded shadow transition-all flex items-center justify-center gap-1 ${
                                   isLunas
-                                    ? "bg-emerald-600 hover:bg-emerald-700 animate-pulse font-extrabold"
-                                    : "bg-emerald-900/60 hover:bg-emerald-800"
+                                    ? "bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold shadow-md animate-pulse cursor-pointer"
+                                    : "bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed opacity-50 select-none"
                                 }`}
+                                title={isLunas ? "Cetak Struk Pengambilan Jaminan (Lunas)" : "Terkunci: Hanya bisa dicetak jika sistem menyatakan LUNAS"}
                               >
-                                <Gift className="h-3 w-3 text-emerald-300" />
-                                3. Struk Pengambilan {isLunas && "(LUNAS)"}
+                                {isLunas ? (
+                                  <>
+                                    <Gift className="h-3 w-3 text-white" /> 3. Struk Pengambilan (LUNAS)
+                                  </>
+                                ) : (
+                                  <>
+                                    <FolderLock className="h-3 w-3 text-slate-400" /> 3. Struk Pengambilan 🔒
+                                  </>
+                                )}
                               </button>
                             </div>
                           </td>
@@ -720,11 +749,9 @@ const PencairanPage: React.FC = () => {
                     <select
                       value={metodeCair}
                       onChange={(e) => setMetodeCair(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#1976d2] font-medium"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#1976d2] font-bold text-slate-800"
                     >
-                      <option value="Transfer BCA">Transfer BCA</option>
-                      <option value="Transfer Mandiri">Transfer Mandiri</option>
-                      <option value="Transfer BRI">Transfer BRI</option>
+                      <option value="Transfer Bank">Transfer Bank (BCA / Mandiri / BRI / DLL)</option>
                       <option value="Cash / Tunai di Kasir">Cash / Tunai di Kasir</option>
                     </select>
                   </div>
@@ -739,6 +766,64 @@ const PencairanPage: React.FC = () => {
                     />
                   </div>
                 </div>
+
+                {/* Sub-form Input Rekening Bank Tujuan jika memilih Transfer Bank */}
+                {metodeCair !== "Cash / Tunai di Kasir" && (
+                  <div className="bg-blue-50/70 p-4 rounded-xl border border-blue-200 space-y-3 mt-2">
+                    <div className="flex items-center justify-between border-b border-blue-200 pb-1.5">
+                      <span className="font-bold text-blue-900 text-xs flex items-center gap-1.5">
+                        <CreditCard className="h-4 w-4 text-[#1976d2]" /> Input Rekening Tujuan Pencairan Nasabah *
+                      </span>
+                      <span className="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded font-bold uppercase">
+                        Wajib untuk Transfer Bank
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="font-semibold text-slate-700 block mb-1">Bank Tujuan *</label>
+                        <select
+                          value={bankTujuan}
+                          onChange={(e) => setBankTujuan(e.target.value)}
+                          className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#1976d2] font-bold text-slate-800"
+                        >
+                          <option value="Bank BCA">Bank BCA</option>
+                          <option value="Bank Mandiri">Bank Mandiri</option>
+                          <option value="Bank BRI">Bank BRI</option>
+                          <option value="Bank BNI">Bank BNI</option>
+                          <option value="Bank CIMB Niaga">Bank CIMB Niaga</option>
+                          <option value="Bank Danamon">Bank Danamon</option>
+                          <option value="Bank Permata">Bank Permata</option>
+                          <option value="Lainnya">Lainnya</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="font-semibold text-slate-700 block mb-1">Nomor Rekening Tujuan *</label>
+                        <input
+                          type="text"
+                          required
+                          value={noRekeningTujuan}
+                          onChange={(e) => setNoRekeningTujuan(e.target.value)}
+                          placeholder="e.g. 7371029841"
+                          className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#1976d2] font-mono font-bold text-slate-900"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-semibold text-slate-700 block mb-1">Atas Nama Rekening (Pemilik) *</label>
+                        <input
+                          type="text"
+                          required
+                          value={atasNamaRekeningTujuan}
+                          onChange={(e) => setAtasNamaRekeningTujuan(e.target.value)}
+                          placeholder="Nama Sesuai Rekening Bank"
+                          className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#1976d2] font-semibold text-slate-800"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Section 2: Pendataan Jaminan (Collateral Type Selection) */}
@@ -1149,8 +1234,21 @@ const PencairanPage: React.FC = () => {
                       </div>
                       <div>
                         <span className="text-slate-400 block text-[9px] uppercase font-bold">METODE CAIR:</span>
-                        <strong className="text-emerald-700">Transfer BCA / Cash</strong>
+                        <strong className="text-emerald-700 font-bold">
+                          {receiptContract.metodePencairan || "Transfer Bank"}
+                        </strong>
                       </div>
+                      {receiptContract.metodePencairan !== "Cash / Tunai di Kasir" && (
+                        <div>
+                          <span className="text-slate-400 block text-[9px] uppercase font-bold">REKENING TUJUAN:</span>
+                          <strong className="text-blue-900 font-mono text-[11px] block">
+                            {receiptContract.bankTujuan || "Bank BCA"} - {receiptContract.nomorRekeningTujuan || "7371029841"}
+                          </strong>
+                          <span className="text-[10px] text-slate-600 block">
+                            a.n. {receiptContract.atasNamaRekeningTujuan || receiptContract.namaPeminjam}
+                          </span>
+                        </div>
+                      )}
                       <div>
                         <span className="text-slate-400 block text-[9px] uppercase font-bold">ADMIN KASIR:</span>
                         <strong className="text-slate-800">{receiptContract.petugasPencairan || receiptContract.adminPenanggungJawab}</strong>
@@ -1205,12 +1303,16 @@ const PencairanPage: React.FC = () => {
                         <tr className="border-b">
                           <td className="p-2 text-slate-700">Potongan Administrasi Pencairan:</td>
                           <td className="p-2 text-center text-slate-600">Potong Awal</td>
-                          <td className="p-2 text-right font-bold text-rose-600">- Rp 50.000,00</td>
+                          <td className="p-2 text-right font-bold text-rose-600">- {formatRupiah(receiptContract.potonganBiayaAdmin || 50000)}</td>
                         </tr>
                         <tr className="border-b-2 border-slate-900 bg-emerald-50 font-bold">
                           <td className="p-2 text-emerald-950 font-black">TOTAL NET DITERIMA NASABAH:</td>
-                          <td className="p-2 text-center text-emerald-800">Transfer Net</td>
-                          <td className="p-2 text-right text-emerald-900 font-black text-sm">{formatRupiah(receiptContract.jumlahPokok - 50000)}</td>
+                          <td className="p-2 text-center text-emerald-800">
+                            {receiptContract.metodePencairan === "Cash / Tunai di Kasir" ? "Tunai Kasir" : "Transfer Net"}
+                          </td>
+                          <td className="p-2 text-right text-emerald-900 font-black text-sm">
+                            {formatRupiah(receiptContract.jumlahPokok - (receiptContract.potonganBiayaAdmin || 50000))}
+                          </td>
                         </tr>
                         <tr className="bg-slate-100">
                           <td className="p-2 font-bold text-slate-900">Total Nilai Pelunasan Tagihan:</td>
