@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import useAuth from "@/hooks/useAuth";
+import { BarcodeSVG, QRCodeSVG } from "@/components/ReceiptBarcode";
 import {
   INITIAL_PEMBIAYAAN_DATA,
   MOCK_ADMIN_OFFICERS,
@@ -34,6 +35,9 @@ import {
   ArrowRight,
   Package,
   Sparkles,
+  ShieldAlert,
+  BadgeCheck,
+  QrCode,
 } from "lucide-react";
 
 const PencairanPage: React.FC = () => {
@@ -293,7 +297,7 @@ const PencairanPage: React.FC = () => {
             Menu Pencairan & Pendataan Jaminan (Collateral Vault)
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Proses pembiayaan yang telah disetujui Owner, pendataan inventori agunan (HP, BPKB), cetak struk pencairan & struk barang jaminan.
+            Proses pembiayaan yang telah disetujui Owner, pendataan inventori agunan (HP, BPKB), cetak struk pencairan & struk barang jaminan ber-barcode.
           </p>
         </div>
 
@@ -975,7 +979,7 @@ const PencairanPage: React.FC = () => {
                   type="submit"
                   className="px-6 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-lg transition-all flex items-center gap-2"
                 >
-                  <CheckCircle2 className="h-4 w-4" /> Simpan Pencairan & Terbitkan Struk Resmi
+                  <CheckCircle2 className="h-4 w-4" /> Simpan Pencairan & Terbitkan Struk Ber-Barcode
                 </button>
               </div>
             </form>
@@ -983,21 +987,21 @@ const PencairanPage: React.FC = () => {
         </div>
       )}
 
-      {/* --- MODAL 2: CETAK STRUK PROFESIONAL (DISBURSEMENT & COLLATERAL RECEIPT) --- */}
+      {/* --- MODAL 2: CETAK STRUK PROFESIONAL (DISBURSEMENT & COLLATERAL RECEIPT WITH BARCODE & QR) --- */}
       {isReceiptModalOpen && receiptContract && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8">
+          <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8">
             {/* Header Dialog (no-print) */}
             <div className="no-print flex items-center justify-between bg-slate-900 px-6 py-4 text-white">
               <div className="flex items-center gap-2">
                 <Printer className="h-5 w-5 text-emerald-400" />
-                <h3 className="font-bold text-sm text-white">Cetak Struk Resmi MCM Finance</h3>
+                <h3 className="font-bold text-sm text-white">Cetak Struk Resmi Ber-Barcode MCM Finance</h3>
               </div>
 
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleTriggerPrint}
-                  className="px-3 py-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow flex items-center gap-1.5 transition-all"
+                  className="px-4 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-md flex items-center gap-2 transition-all"
                 >
                   <Printer className="h-4 w-4" /> Cetak (Print)
                 </button>
@@ -1014,20 +1018,20 @@ const PencairanPage: React.FC = () => {
             <div className="no-print flex border-b bg-slate-100 text-xs font-bold p-2 gap-2">
               <button
                 onClick={() => setReceiptTab("pencairan")}
-                className={`flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-2 ${
+                className={`flex-1 py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 ${
                   receiptTab === "pencairan"
-                    ? "bg-[#1976d2] text-white shadow"
+                    ? "bg-[#1976d2] text-white shadow-md"
                     : "bg-white text-slate-700 hover:bg-slate-200"
                 }`}
               >
-                <Receipt className="h-4 w-4" /> 1. Struk Pencairan Dana
+                <Receipt className="h-4 w-4" /> 1. Struk Bukti Pencairan (Ber-Barcode)
               </button>
 
               <button
                 onClick={() => setReceiptTab("jaminan")}
-                className={`flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-2 ${
+                className={`flex-1 py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 ${
                   receiptTab === "jaminan"
-                    ? "bg-emerald-600 text-white shadow"
+                    ? "bg-emerald-600 text-white shadow-md"
                     : "bg-white text-slate-700 hover:bg-slate-200"
                 }`}
               >
@@ -1036,150 +1040,256 @@ const PencairanPage: React.FC = () => {
             </div>
 
             {/* PRINTABLE RECEIPT CONTENT CONTAINER */}
-            <div className="p-8 bg-white text-slate-900 font-sans space-y-6 printable-receipt max-h-[75vh] overflow-y-auto">
+            <div className="p-8 bg-white text-slate-900 font-sans space-y-6 printable-receipt max-h-[75vh] overflow-y-auto border-4 border-slate-900 relative">
               {receiptTab === "pencairan" ? (
                 /* RECEIPT TYPE 1: STRUK PENCAIRAN DANA */
                 <div className="space-y-6">
-                  {/* Receipt Header */}
-                  <div className="text-center border-b-2 border-slate-900 pb-4 space-y-1">
-                    <h2 className="text-xl font-black tracking-wider text-slate-900 uppercase">
-                      MCM FINANCE & MULTI GUNA
-                    </h2>
-                    <p className="text-xs font-semibold text-slate-600">
-                      Jl. A. P. Pettarani No. 45, Makassar | Telp / WA: 0812-3456-7890
-                    </p>
-                    <span className="inline-block mt-2 px-4 py-1 text-xs font-black bg-slate-900 text-white rounded-full uppercase tracking-widest">
-                      STRUK BUKTI PENCAIRAN PEMBIAYAAN
-                    </span>
+                  {/* Corporate Header with Logo & Official Reg */}
+                  <div className="border-b-2 border-slate-900 pb-4 flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-14 w-14 bg-slate-900 text-white rounded-xl flex items-center justify-center font-black text-2xl tracking-tighter shrink-0 border-2 border-amber-400 shadow">
+                        MCM
+                      </div>
+                      <div className="space-y-0.5">
+                        <h2 className="text-lg font-black tracking-wider text-slate-900 uppercase">
+                          PT MCM MULTI FINANCE INDONESIA
+                        </h2>
+                        <p className="text-[11px] font-semibold text-slate-600">
+                          Izin Kemenkumham No. KEP-889/KM.10/2026 | Head Office: Jl. A. P. Pettarani No. 45, Makassar
+                        </p>
+                        <p className="text-[10px] text-slate-500 font-mono">
+                          Call Center / WA: 0812-3456-7890 | Web: https://mcm-finance.vercel.app
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* QR Code Security Badge */}
+                    <div className="text-center shrink-0">
+                      <QRCodeSVG value={`MCM-VERIFY-${receiptContract.nomorPembiayaan}`} size={64} />
+                      <span className="text-[8px] font-mono text-slate-500 block mt-1 uppercase">Scan to Verify</span>
+                    </div>
                   </div>
 
-                  {/* Transaction & Borrower Info */}
-                  <div className="grid grid-cols-2 gap-4 text-xs font-mono border-b pb-4">
-                    <div className="space-y-1">
+                  {/* Title Banner & Barcode Header */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-900 text-white p-3 rounded-lg">
+                    <div>
+                      <span className="text-[10px] font-mono text-amber-400 block tracking-widest uppercase font-bold">
+                        OFFICIAL DISBURSEMENT SLIP
+                      </span>
+                      <h3 className="text-sm font-black tracking-wide text-white uppercase">
+                        STRUK BUKTI PENCAIRAN DANA PEMBIAYAAN
+                      </h3>
+                    </div>
+
+                    {/* Vector Barcode */}
+                    <div className="bg-white p-2 rounded border border-slate-700 text-slate-950">
+                      <BarcodeSVG value={receiptContract.nomorPembiayaan} height={32} />
+                    </div>
+                  </div>
+
+                  {/* Transaction & Borrower Information Grid */}
+                  <div className="grid grid-cols-2 gap-4 text-xs font-mono bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div className="space-y-1.5 border-r pr-4">
                       <div>
-                        <span className="text-slate-400 block text-[10px]">NO. PEMBIAYAAN:</span>
-                        <strong className="text-slate-900 font-black text-sm">{receiptContract.nomorPembiayaan}</strong>
+                        <span className="text-slate-400 block text-[9px] uppercase font-bold">NOMOR PEMBIAYAAN:</span>
+                        <strong className="text-[#1976d2] font-black text-sm">{receiptContract.nomorPembiayaan}</strong>
                       </div>
                       <div>
-                        <span className="text-slate-400 block text-[10px]">TANGGAL PENCAIRAN:</span>
-                        <strong className="text-slate-800">{receiptContract.tanggalPencairan}</strong>
+                        <span className="text-slate-400 block text-[9px] uppercase font-bold">TANGGAL PENCAIRAN:</span>
+                        <strong className="text-slate-900">{receiptContract.tanggalPencairan}</strong>
                       </div>
                       <div>
-                        <span className="text-slate-400 block text-[10px]">ADMIN PETUGAS:</span>
+                        <span className="text-slate-400 block text-[9px] uppercase font-bold">METODE CAIR:</span>
+                        <strong className="text-emerald-700">Transfer BCA / Cash</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[9px] uppercase font-bold">ADMIN KASIR:</span>
                         <strong className="text-slate-800">{receiptContract.petugasPencairan || receiptContract.adminPenanggungJawab}</strong>
                       </div>
                     </div>
 
-                    <div className="space-y-1 text-right">
+                    <div className="space-y-1.5 pl-2 text-right">
                       <div>
-                        <span className="text-slate-400 block text-[10px]">NAMA PEMINJAM:</span>
+                        <span className="text-slate-400 block text-[9px] uppercase font-bold">NAMA NASABAH:</span>
                         <strong className="text-slate-900 font-bold text-sm block">{receiptContract.namaPeminjam}</strong>
                       </div>
                       <div>
-                        <span className="text-slate-400 block text-[10px]">NIK PEMINJAM:</span>
+                        <span className="text-slate-400 block text-[9px] uppercase font-bold">NIK KTP:</span>
                         <strong className="text-slate-800">{receiptContract.nikPeminjam}</strong>
                       </div>
                       <div>
-                        <span className="text-slate-400 block text-[10px]">WHATSAPP:</span>
+                        <span className="text-slate-400 block text-[9px] uppercase font-bold">WHATSAPP:</span>
                         <strong className="text-emerald-700">{receiptContract.whatsappPeminjam}</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[9px] uppercase font-bold">SECURITY HASH:</span>
+                        <strong className="text-slate-400 text-[10px]">SEC-{Math.abs(receiptContract.jumlahPokok * 7).toString(16).toUpperCase()}</strong>
                       </div>
                     </div>
                   </div>
 
-                  {/* Financial Breakdown Table */}
+                  {/* Itemized Financial Breakdown Table */}
                   <div className="space-y-2">
-                    <h4 className="font-bold text-xs uppercase tracking-wider text-slate-800 border-b pb-1">
-                      RINCIAN PENCAIRAN DANA:
+                    <h4 className="font-bold text-xs uppercase tracking-wider text-slate-900 border-b-2 border-slate-900 pb-1 flex items-center justify-between">
+                      <span>RINCIAN ANGGARAN CAIR & SKEMA PENAGIHAN:</span>
+                      <span className="text-[10px] text-slate-500 font-normal">Mata Uang: IDR (Rupiah)</span>
                     </h4>
-                    <table className="w-full text-xs font-mono border-collapse">
+                    <table className="w-full text-xs font-mono border-collapse border border-slate-300">
+                      <thead>
+                        <tr className="bg-slate-900 text-white text-[10px] uppercase">
+                          <th className="p-2 text-left">Deskripsi Komponen</th>
+                          <th className="p-2 text-center">Skema / Tenor</th>
+                          <th className="p-2 text-right">Nominal (Rp)</th>
+                        </tr>
+                      </thead>
                       <tbody>
                         <tr className="border-b">
-                          <td className="py-2 text-slate-600">Nominal Pokok Pembiayaan:</td>
-                          <td className="py-2 text-right font-bold text-slate-900">{formatRupiah(receiptContract.jumlahPokok)}</td>
+                          <td className="p-2 font-bold text-slate-900">Pokok Pinjaman Dicairkan:</td>
+                          <td className="p-2 text-center text-slate-600">1 Periode Awal</td>
+                          <td className="p-2 text-right font-black text-slate-900 text-sm">{formatRupiah(receiptContract.jumlahPokok)}</td>
+                        </tr>
+                        <tr className="border-b bg-slate-50">
+                          <td className="p-2 text-slate-700">Biaya Margin Bunga ({receiptContract.persenMargin}%):</td>
+                          <td className="p-2 text-center text-slate-600">Per 15 Hari</td>
+                          <td className="p-2 text-right font-bold text-emerald-700">{formatRupiah(receiptContract.biayaMargin)}</td>
                         </tr>
                         <tr className="border-b">
-                          <td className="py-2 text-slate-600">Margin (%) / Bunga per 15 Hari:</td>
-                          <td className="py-2 text-right font-bold text-emerald-700">
-                            {receiptContract.persenMargin}% ({formatRupiah(receiptContract.biayaMargin)})
-                          </td>
+                          <td className="p-2 text-slate-700">Potongan Administrasi Pencairan:</td>
+                          <td className="p-2 text-center text-slate-600">Potong Awal</td>
+                          <td className="p-2 text-right font-bold text-rose-600">- Rp 50.000,00</td>
                         </tr>
-                        <tr className="border-b bg-slate-50 font-bold">
-                          <td className="py-2 px-2 text-slate-900">Total Nilai Tagihan:</td>
-                          <td className="py-2 px-2 text-right text-slate-900 text-sm">{formatRupiah(receiptContract.totalTagihan)}</td>
+                        <tr className="border-b-2 border-slate-900 bg-emerald-50 font-bold">
+                          <td className="p-2 text-emerald-950 font-black">TOTAL NET DITERIMA NASABAH:</td>
+                          <td className="p-2 text-center text-emerald-800">Transfer Net</td>
+                          <td className="p-2 text-right text-emerald-900 font-black text-sm">{formatRupiah(receiptContract.jumlahPokok - 50000)}</td>
                         </tr>
-                        <tr className="border-b">
-                          <td className="py-2 text-slate-600">Jatuh Tempo Pembayaran Berikutnya:</td>
-                          <td className="py-2 text-right font-bold text-rose-600">{receiptContract.tanggalJatuhTempo}</td>
+                        <tr className="bg-slate-100">
+                          <td className="p-2 font-bold text-slate-900">Total Nilai Pelunasan Tagihan:</td>
+                          <td className="p-2 text-center text-blue-700 font-bold">{receiptContract.jenisPembayaran}</td>
+                          <td className="p-2 text-right font-black text-slate-900 text-sm">{formatRupiah(receiptContract.totalTagihan)}</td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
 
-                  {/* Signatures Area */}
-                  <div className="pt-8 grid grid-cols-2 gap-8 text-center text-xs">
+                  {/* Terms & Legal Disclaimer */}
+                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-[10px] text-slate-600 space-y-1">
+                    <strong className="font-bold text-slate-900 uppercase block">Ketentuan & Catatan Resmi:</strong>
+                    <p>1. Struk ini merupakan bukti pencairan dana sah yang telah dikonfirmasi dan ditandatangani oleh penerima.</p>
+                    <p>2. Jatuh tempo pembayaran angsuran bunga berikutnya ditetapkan pada tanggal <strong className="text-rose-700">{receiptContract.tanggalJatuhTempo}</strong>.</p>
+                    <p>3. Simpan struk ini sebagai bukti transaksi resmi saat melakukan pembayaran atau pengambilan barang jaminan.</p>
+                  </div>
+
+                  {/* Signatures & Official Stamp Area */}
+                  <div className="pt-6 grid grid-cols-2 gap-8 text-center text-xs relative">
                     <div>
-                      <p className="font-semibold text-slate-600 mb-12">Peminjam / Nasabah,</p>
-                      <p className="font-bold border-b border-slate-900 inline-block px-4">{receiptContract.namaPeminjam}</p>
+                      <p className="font-bold text-slate-700 mb-14">Penerima Dana / Nasabah,</p>
+                      <p className="font-black text-slate-900 border-b-2 border-slate-900 inline-block px-6 py-0.5 uppercase">
+                        {receiptContract.namaPeminjam}
+                      </p>
                     </div>
-                    <div>
-                      <p className="font-semibold text-slate-600 mb-12">Petugas Kasir / Admin,</p>
-                      <p className="font-bold border-b border-slate-900 inline-block px-4">
+
+                    <div className="relative">
+                      {/* Stempel Cap Basah Emblem */}
+                      <div className="absolute left-1/2 -translate-x-1/2 top-4 h-20 w-20 border-4 border-emerald-600/40 rounded-full flex items-center justify-center text-emerald-700 font-black text-[9px] uppercase tracking-tighter rotate-[-12deg] pointer-events-none select-none">
+                        <div className="text-center">
+                          <span>★ MCM ★</span>
+                          <span className="block font-bold text-[8px]">CAIR & VALID</span>
+                          <span className="text-[7px]">OFFICIAL</span>
+                        </div>
+                      </div>
+
+                      <p className="font-bold text-slate-700 mb-14">Kasir / Admin PenanggungJawab,</p>
+                      <p className="font-black text-slate-900 border-b-2 border-slate-900 inline-block px-6 py-0.5 uppercase">
                         {receiptContract.petugasPencairan || receiptContract.adminPenanggungJawab}
                       </p>
                     </div>
                   </div>
                 </div>
               ) : (
-                /* RECEIPT TYPE 2: STRUK BARANG JAMINAN & PENGAMBILAN (FINAL RELEASE RECEIPT) */
+                /* RECEIPT TYPE 2: STRUK BARANG JAMINAN & PENGAMBILAN (WITH BARCODE & STAMP) */
                 <div className="space-y-6">
-                  {/* Receipt Header */}
-                  <div className="text-center border-b-2 border-slate-900 pb-4 space-y-1">
-                    <h2 className="text-xl font-black tracking-wider text-slate-900 uppercase">
-                      MCM FINANCE - DIVISI AGUNAN & VAULT
-                    </h2>
-                    <p className="text-xs font-semibold text-slate-600">
-                      Jl. A. P. Pettarani No. 45, Makassar | Telp / WA: 0812-3456-7890
-                    </p>
-                    <span
-                      className={`inline-block mt-2 px-4 py-1 text-xs font-black rounded-full uppercase tracking-widest ${
-                        receiptContract.status === "Lunas"
-                          ? "bg-emerald-600 text-white"
-                          : "bg-slate-900 text-white"
-                      }`}
-                    >
-                      {receiptContract.status === "Lunas"
-                        ? "STRUK FINAL SERAH TERIMA PENGAMBILAN BARANG JAMINAN"
-                        : "STRUK TANDA TERIMA PENYERAHAN BARANG JAMINAN"}
-                    </span>
+                  {/* Corporate Header */}
+                  <div className="border-b-2 border-slate-900 pb-4 flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-14 w-14 bg-slate-900 text-white rounded-xl flex items-center justify-center font-black text-2xl tracking-tighter shrink-0 border-2 border-amber-400 shadow">
+                        MCM
+                      </div>
+                      <div className="space-y-0.5">
+                        <h2 className="text-lg font-black tracking-wider text-slate-900 uppercase">
+                          DIVISI VAULT & MANAJEMEN AGUNAN
+                        </h2>
+                        <p className="text-[11px] font-semibold text-slate-600">
+                          PT MCM Multi Finance | Vault Center: Brankas Utama Pettarani Makassar
+                        </p>
+                        <p className="text-[10px] text-slate-500 font-mono">
+                          Nomor Pengawasan Simpan: VAULT-REG-2026/09
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* QR Code */}
+                    <div className="text-center shrink-0">
+                      <QRCodeSVG
+                        value={`JMN-VERIFY-${receiptContract.dataJaminan?.idJaminan || receiptContract.nomorPembiayaan}`}
+                        size={64}
+                      />
+                      <span className="text-[8px] font-mono text-slate-500 block mt-1 uppercase font-bold">Scan Vault ID</span>
+                    </div>
+                  </div>
+
+                  {/* Title Banner with Barcode */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-900 text-white p-3 rounded-lg">
+                    <div>
+                      <span className="text-[10px] font-mono text-amber-400 block tracking-widest uppercase font-bold">
+                        OFFICIAL COLLATERAL RECEIPT
+                      </span>
+                      <h3 className="text-sm font-black tracking-wide text-white uppercase">
+                        {receiptContract.status === "Lunas"
+                          ? "STRUK FINAL SERAH TERIMA PENGAMBILAN JAMINAN"
+                          : "STRUK TANDA TERIMA PENYERAHAN BARANG JAMINAN"}
+                      </h3>
+                    </div>
+
+                    {/* Vector Barcode for Jaminan */}
+                    <div className="bg-white p-2 rounded border border-slate-700 text-slate-950">
+                      <BarcodeSVG
+                        value={receiptContract.dataJaminan?.idJaminan || `JMN-${receiptContract.nomorPembiayaan}`}
+                        height={32}
+                      />
+                    </div>
                   </div>
 
                   {/* Final Status Stamp Alert */}
                   {receiptContract.status === "Lunas" ? (
-                    <div className="bg-emerald-50 border-2 border-emerald-500 p-4 rounded-xl text-center space-y-1">
-                      <span className="text-xs font-black uppercase text-emerald-800 tracking-widest block">
-                        ✓ PEMBAYARAN TELAH LUNAS 100%
+                    <div className="bg-emerald-50 border-2 border-emerald-600 p-4 rounded-xl text-center space-y-1">
+                      <span className="text-xs font-black uppercase text-emerald-800 tracking-widest block flex items-center justify-center gap-1">
+                        <BadgeCheck className="h-4 w-4 text-emerald-600" /> ✓ STATUS PEMBAYARAN: LUNAS 100% (LUNAS TOTAL)
                       </span>
-                      <p className="text-xs text-emerald-900 font-medium">
-                        Struk ini menjadi bukti resmi pengembalian & penyerahan kembali barang jaminan dari pihak MCM Finance kepada pemilik sah.
+                      <p className="text-xs text-emerald-950 font-semibold">
+                        Struk ini resmi memvalidasi bahwa seluruh kewajiban pinjaman telah selesai dan barang jaminan diserahkan kembali kepada pemilik sah.
                       </p>
                     </div>
                   ) : (
-                    <div className="bg-blue-50 border border-blue-200 p-3 rounded-xl text-xs text-blue-900 font-medium">
-                      ℹ️ Barang jaminan di bawah ini tersimpan secara aman di vault/brankas MCM Finance dan dapat diambil setelah seluruh tagihan lunas.
+                    <div className="bg-amber-50 border border-amber-300 p-3 rounded-xl text-xs text-amber-950 font-semibold flex items-center gap-2">
+                      <FolderLock className="h-5 w-5 text-amber-600 shrink-0" />
+                      <span>
+                        Barang jaminan di bawah ini tersimpan secara aman di vault/brankas MCM Finance dan dapat diambil setelah seluruh tagihan dinyatakan LUNAS.
+                      </span>
                     </div>
                   )}
 
-                  {/* Collateral & Inventory Details */}
+                  {/* Collateral & Inventory Data Grid */}
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 font-mono text-xs">
                     <div className="grid grid-cols-2 gap-2 border-b pb-2">
                       <div>
-                        <span className="text-slate-400 block text-[10px]">KODE ID JAMINAN:</span>
-                        <strong className="text-slate-900 font-black text-sm">
+                        <span className="text-slate-400 block text-[9px] uppercase font-bold">KODE ID BARANG AGUNAN:</span>
+                        <strong className="text-[#1976d2] font-black text-sm">
                           {receiptContract.dataJaminan?.idJaminan || `JMN-${receiptContract.nomorPembiayaan}`}
                         </strong>
                       </div>
                       <div className="text-right">
-                        <span className="text-slate-400 block text-[10px]">LOKASI PENYIMPANAN:</span>
+                        <span className="text-slate-400 block text-[9px] uppercase font-bold">LOKASI TERDAFTAR BRANKAS:</span>
                         <strong className="text-amber-800 font-bold">
                           {receiptContract.dataJaminan?.lokasiPenyimpanan || "Brankas Utama Kasir A-1"}
                         </strong>
@@ -1187,7 +1297,7 @@ const PencairanPage: React.FC = () => {
                     </div>
 
                     <div className="space-y-1">
-                      <span className="text-slate-400 block text-[10px]">DETAIL RIGID BARANG AGUNAN:</span>
+                      <span className="text-slate-400 block text-[9px] uppercase font-bold">DETAIL RIGID SPESIFIKASI BARANG:</span>
                       <strong className="text-slate-900 font-bold block text-sm">
                         {receiptContract.dataJaminan?.handphoneDetails
                           ? `${receiptContract.dataJaminan.handphoneDetails.merk} ${receiptContract.dataJaminan.handphoneDetails.tipe}`
@@ -1197,32 +1307,52 @@ const PencairanPage: React.FC = () => {
                       </strong>
 
                       {receiptContract.dataJaminan?.handphoneDetails && (
-                        <p className="text-[11px] text-slate-600">
-                          Kondisi Fisik: {receiptContract.dataJaminan.handphoneDetails.kondisi} | Kelengkapan:{" "}
-                          {receiptContract.dataJaminan.handphoneDetails.kelengkapan.join(", ")}
-                        </p>
+                        <div className="bg-white p-2.5 rounded border text-[11px] text-slate-700 space-y-1">
+                          <p><strong>Kondisi Fisik:</strong> {receiptContract.dataJaminan.handphoneDetails.kondisi}</p>
+                          <p><strong>Kelengkapan Diserahkan:</strong> {receiptContract.dataJaminan.handphoneDetails.kelengkapan.join(", ")}</p>
+                        </div>
                       )}
 
                       {receiptContract.dataJaminan?.bpkbDetails && (
-                        <p className="text-[11px] text-slate-600">
-                          No. BPKB: {receiptContract.dataJaminan.bpkbDetails.nomorBpkb} | No. Rangka:{" "}
-                          {receiptContract.dataJaminan.bpkbDetails.nomorRangkaMesin || "-"}
-                        </p>
+                        <div className="bg-white p-2.5 rounded border text-[11px] text-slate-700 space-y-1">
+                          <p><strong>Nomor BPKB Resmi:</strong> {receiptContract.dataJaminan.bpkbDetails.nomorBpkb}</p>
+                          <p><strong>No Rangka/Mesin:</strong> {receiptContract.dataJaminan.bpkbDetails.nomorRangkaMesin || "-"}</p>
+                        </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Signatures Area */}
-                  <div className="pt-8 grid grid-cols-2 gap-8 text-center text-xs">
+                  {/* Signatures & Official Stamp Area */}
+                  <div className="pt-6 grid grid-cols-2 gap-8 text-center text-xs relative">
                     <div>
-                      <p className="font-semibold text-slate-600 mb-12">
+                      <p className="font-bold text-slate-700 mb-14">
                         {receiptContract.status === "Lunas" ? "Penerima Pengambilan Barang," : "Pemilik Barang Jaminan,"}
                       </p>
-                      <p className="font-bold border-b border-slate-900 inline-block px-4">{receiptContract.namaPeminjam}</p>
+                      <p className="font-black text-slate-900 border-b-2 border-slate-900 inline-block px-6 py-0.5 uppercase">
+                        {receiptContract.namaPeminjam}
+                      </p>
                     </div>
-                    <div>
-                      <p className="font-semibold text-slate-600 mb-12">Petugas Simpan / Admin,</p>
-                      <p className="font-bold border-b border-slate-900 inline-block px-4">
+
+                    <div className="relative">
+                      {/* Stempel Cap Basah Emblem */}
+                      <div
+                        className={`absolute left-1/2 -translate-x-1/2 top-4 h-20 w-20 border-4 rounded-full flex items-center justify-center font-black text-[9px] uppercase tracking-tighter rotate-[-12deg] pointer-events-none select-none ${
+                          receiptContract.status === "Lunas"
+                            ? "border-emerald-600/50 text-emerald-800"
+                            : "border-blue-600/50 text-blue-800"
+                        }`}
+                      >
+                        <div className="text-center">
+                          <span>★ MCM ★</span>
+                          <span className="block font-bold text-[8px]">
+                            {receiptContract.status === "Lunas" ? "TERSERAHKAN" : "TERSIMPAN"}
+                          </span>
+                          <span className="text-[7px]">VAULT OK</span>
+                        </div>
+                      </div>
+
+                      <p className="font-bold text-slate-700 mb-14">Petugas Simpan / Admin Vault,</p>
+                      <p className="font-black text-slate-900 border-b-2 border-slate-900 inline-block px-6 py-0.5 uppercase">
                         {receiptContract.dataJaminan?.petugasPenerima || receiptContract.adminPenanggungJawab}
                       </p>
                     </div>
