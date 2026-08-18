@@ -282,6 +282,10 @@ const PencairanPage: React.FC = () => {
     contract: TransaksiPembiayaan,
     tab: "pencairan" | "tandaterima" | "pengambilan"
   ) => {
+    if (tab === "pengambilan" && contract.status !== "Lunas") {
+      alert("🔒 AKSI DITOLAK: Struk Pengambilan Jaminan HANYA BISA DICETAK apabila transaksi pembiayaan telah berstatus LUNAS 100% (Siap Ambil / Lunas)!");
+      return;
+    }
     setReceiptContract(contract);
     setReceiptTab(tab);
     setIsReceiptModalOpen(true);
@@ -289,6 +293,10 @@ const PencairanPage: React.FC = () => {
 
   // Browser Print Action
   const handleTriggerPrint = () => {
+    if (receiptTab === "pengambilan" && receiptContract?.status !== "Lunas") {
+      alert("🔒 CETAK DITOLAK: Struk Pengambilan Jaminan HANYA BISA DICETAK jika sistem menyatakan LUNAS 100%!");
+      return;
+    }
     window.print();
   };
 
@@ -1050,14 +1058,23 @@ const PencairanPage: React.FC = () => {
               </button>
 
               <button
-                onClick={() => setReceiptTab("pengambilan")}
+                onClick={() => {
+                  if (receiptContract.status !== "Lunas") {
+                    alert("🔒 AKSI DITOLAK: Struk Pengambilan Jaminan HANYA BISA DICETAK apabila transaksi pembiayaan telah berstatus LUNAS 100% (Siap Ambil / Lunas)!");
+                    return;
+                  }
+                  setReceiptTab("pengambilan");
+                }}
                 className={`py-2.5 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
                   receiptTab === "pengambilan"
                     ? "bg-emerald-600 text-white shadow-md font-extrabold"
-                    : "bg-white text-slate-700 hover:bg-slate-200"
+                    : receiptContract.status === "Lunas"
+                    ? "bg-white text-emerald-700 hover:bg-emerald-50 border border-emerald-300 font-bold"
+                    : "bg-slate-200 text-slate-400 cursor-not-allowed opacity-65"
                 }`}
+                title={receiptContract.status === "Lunas" ? "Cetak Struk Pengambilan Jaminan (LUNAS)" : "Terkunci: Hanya bisa dicetak jika sistem menyatakan LUNAS"}
               >
-                <Gift className="h-3.5 w-3.5 text-emerald-300" /> 3. Struk Pengambilan {receiptContract.status === "Lunas" && "(LUNAS)"}
+                <Gift className="h-3.5 w-3.5" /> 3. Struk Pengambilan {receiptContract.status === "Lunas" ? "(LUNAS)" : "🔒"}
               </button>
             </div>
 
