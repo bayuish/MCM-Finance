@@ -196,6 +196,9 @@ const PencairanPage: React.FC = () => {
     if (jenisJaminan === "Handphone / Gadget") {
       dataJaminanObj = {
         idJaminan: idJaminanGen,
+        nomorPembiayaan: selectedContract.nomorPembiayaan,
+        idPeminjam: selectedContract.idPeminjam,
+        namaPeminjam: selectedContract.namaPeminjam,
         jenisJaminan: "Handphone / Gadget",
         handphoneDetails: {
           merk: hpMerk,
@@ -213,6 +216,9 @@ const PencairanPage: React.FC = () => {
     } else if (jenisJaminan === "BPKB Kendaraan") {
       dataJaminanObj = {
         idJaminan: idJaminanGen,
+        nomorPembiayaan: selectedContract.nomorPembiayaan,
+        idPeminjam: selectedContract.idPeminjam,
+        namaPeminjam: selectedContract.namaPeminjam,
         jenisJaminan: "BPKB Kendaraan",
         bpkbDetails: {
           jenisKendaraan: bpkbJenisKendaraan,
@@ -232,6 +238,9 @@ const PencairanPage: React.FC = () => {
     } else {
       dataJaminanObj = {
         idJaminan: idJaminanGen,
+        nomorPembiayaan: selectedContract.nomorPembiayaan,
+        idPeminjam: selectedContract.idPeminjam,
+        namaPeminjam: selectedContract.namaPeminjam,
         jenisJaminan: "Sertifikat / Lainnya",
         deskripsiLainnya: hpTipe || "Dokumen / Sertifikat Berharga",
         lokasiPenyimpanan: lokasiBrankas,

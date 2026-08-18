@@ -202,7 +202,10 @@ export interface DetailBPKB {
 }
 
 export interface DataJaminan {
-  idJaminan: string; // e.g. JMN-20260818-001
+  idJaminan: string; // Primary Key e.g. JMN-20260818-001
+  nomorPembiayaan: string; // Foreign Key -> TransaksiPembiayaan.nomorPembiayaan
+  idPeminjam: string; // Foreign Key -> Peminjam.id
+  namaPeminjam: string;
   jenisJaminan: JenisJaminanType;
   handphoneDetails?: DetailHandphone;
   bpkbDetails?: DetailBPKB;
@@ -564,6 +567,24 @@ export const INITIAL_PEMBIAYAAN_DATA: TransaksiPembiayaan[] = [
     status: "ACC (Siap Cair)",
     deskripsiJaminan: "iPhone 15 Pro 256GB Deep Purple (SN: C02F9081MD6M)",
     fotoJaminan: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=400&auto=format&fit=crop&q=80",
+    dataJaminan: {
+      idJaminan: "JMN-20260818-007",
+      nomorPembiayaan: "PB-2026-007",
+      idPeminjam: "PEM-003",
+      namaPeminjam: "Siti Rahmawati",
+      jenisJaminan: "Handphone / Gadget",
+      handphoneDetails: {
+        merk: "Apple",
+        tipe: "iPhone 15 Pro 256GB",
+        kondisi: "Fisik Mulus 98%, LCD Original, Baterai Health 95%",
+        kelengkapan: ["Dus Original", "Charger Original", "Kabel Lightning"],
+        fotoHp: ["https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=400&auto=format&fit=crop&q=80"],
+      },
+      lokasiPenyimpanan: "Brankas Utama Kasir A-1",
+      statusJaminan: "Tersimpan di Brankas",
+      tanggalDiterima: "18 Agt 2026",
+      petugasPenerima: "Siti Rahmawati, A.Md.",
+    },
     adminPenanggungJawab: "Siti Rahmawati, A.Md.",
     cabangAdmin: "Cabang Panakkukang Makassar",
     catatanOwner: "Disetujui (ACC) oleh Owner pada 18 Agt 2026. Siap dilakukan pencairan & penyerahan jaminan oleh Admin.",
@@ -591,6 +612,24 @@ export const INITIAL_PEMBIAYAAN_DATA: TransaksiPembiayaan[] = [
     status: "Pending ACC",
     deskripsiJaminan: "BPKB Mobil Toyota Avanza 2023 (No. DD 9988 XA)",
     fotoJaminan: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&auto=format&fit=crop&q=80",
+    dataJaminan: {
+      idJaminan: "JMN-20260818-006",
+      nomorPembiayaan: "PB-2026-006",
+      idPeminjam: "PEM-005",
+      namaPeminjam: "Hj. Ratna Juwita",
+      jenisJaminan: "BPKB Kendaraan",
+      bpkbDetails: {
+        jenisKendaraan: "Mobil",
+        merkModel: "Toyota Avanza 1.5 G MT 2023",
+        nomorPolisi: "DD 9988 XA",
+        nomorBpkb: "BPKB-554433221",
+        fotoBpkb: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&auto=format&fit=crop&q=80",
+      },
+      lokasiPenyimpanan: "Vault Cabang Panakkukang",
+      statusJaminan: "Tersimpan di Brankas",
+      tanggalDiterima: "17 Agt 2026",
+      petugasPenerima: "Siti Rahmawati, A.Md.",
+    },
     adminPenanggungJawab: "Siti Rahmawati, A.Md.",
     cabangAdmin: "Cabang Panakkukang Makassar",
   },
@@ -617,6 +656,24 @@ export const INITIAL_PEMBIAYAAN_DATA: TransaksiPembiayaan[] = [
     status: "Segera jatuh tempo",
     deskripsiJaminan: "BPKB Mobil Honda HR-V 2022 (No. DD 1234 AB)",
     fotoJaminan: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&auto=format&fit=crop&q=80",
+    dataJaminan: {
+      idJaminan: "JMN-20260818-001",
+      nomorPembiayaan: "PB-2026-001",
+      idPeminjam: "PEM-001",
+      namaPeminjam: "Budi Santoso",
+      jenisJaminan: "BPKB Kendaraan",
+      bpkbDetails: {
+        jenisKendaraan: "Mobil",
+        merkModel: "Honda HR-V 1.5 SE 2022",
+        nomorPolisi: "DD 1234 AB",
+        nomorBpkb: "BPKB-987654321",
+        fotoBpkb: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&auto=format&fit=crop&q=80",
+      },
+      lokasiPenyimpanan: "Brankas Utama Kasir A-1",
+      statusJaminan: "Tersimpan di Brankas",
+      tanggalDiterima: "10 Jan 2026",
+      petugasPenerima: "H. Andi Pratama, S.E.",
+    },
     adminPenanggungJawab: "H. Andi Pratama, S.E.",
     cabangAdmin: "Cabang Pusat Pettarani Makassar",
   },
@@ -640,6 +697,18 @@ export const INITIAL_PEMBIAYAAN_DATA: TransaksiPembiayaan[] = [
     status: "Terlambat",
     deskripsiJaminan: "Sertifikat SHM No. 4022/Panakkukang",
     fotoJaminan: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&auto=format&fit=crop&q=80",
+    dataJaminan: {
+      idJaminan: "JMN-20260818-002",
+      nomorPembiayaan: "PB-2026-002",
+      idPeminjam: "PEM-002",
+      namaPeminjam: "PT Mandiri Utama Perkasa",
+      jenisJaminan: "Sertifikat / Lainnya",
+      deskripsiLainnya: "Sertifikat SHM No. 4022/Panakkukang",
+      lokasiPenyimpanan: "Brankas Vault B-2",
+      statusJaminan: "Tersimpan di Brankas",
+      tanggalDiterima: "15 Feb 2026",
+      petugasPenerima: "Siti Rahmawati, A.Md.",
+    },
     adminPenanggungJawab: "Siti Rahmawati, A.Md.",
     cabangAdmin: "Cabang Panakkukang Makassar",
   },
@@ -663,6 +732,24 @@ export const INITIAL_PEMBIAYAAN_DATA: TransaksiPembiayaan[] = [
     status: "Aktif",
     deskripsiJaminan: "BPKB Motor Honda Vario 160 (No. DD 8899 AB)",
     fotoJaminan: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=400&auto=format&fit=crop&q=80",
+    dataJaminan: {
+      idJaminan: "JMN-20260818-003",
+      nomorPembiayaan: "PB-2026-003",
+      idPeminjam: "PEM-003",
+      namaPeminjam: "Siti Nurhaliza",
+      jenisJaminan: "BPKB Kendaraan",
+      bpkbDetails: {
+        jenisKendaraan: "Motor",
+        merkModel: "Honda Vario 160 CBS 2022",
+        nomorPolisi: "DD 8899 AB",
+        nomorBpkb: "BPKB-88991122",
+        fotoBpkb: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=400&auto=format&fit=crop&q=80",
+      },
+      lokasiPenyimpanan: "Vault Cabang Panakkukang",
+      statusJaminan: "Tersimpan di Brankas",
+      tanggalDiterima: "01 Mar 2026",
+      petugasPenerima: "Budi Raharjo, S.Kom.",
+    },
     adminPenanggungJawab: "Budi Raharjo, S.Kom.",
     cabangAdmin: "Cabang Tamalanrea (BTP) Makassar",
   },
@@ -709,7 +796,7 @@ export const INITIAL_PEMBIAYAAN_DATA: TransaksiPembiayaan[] = [
     fotoJaminan: "https://images.unsplash.com/photo-1581094288338-2314dddb7ece?w=400&auto=format&fit=crop&q=80",
   },
   {
-    nomorPembiayaan: "PB-2026-006",
+    nomorPembiayaan: "PB-2026-008",
     idPeminjam: "PEM-004",
     namaPeminjam: "Rina Handayani",
     whatsappPeminjam: "+62 812-9988-7766",
@@ -728,6 +815,24 @@ export const INITIAL_PEMBIAYAAN_DATA: TransaksiPembiayaan[] = [
     status: "Lunas",
     deskripsiJaminan: "BPKB Motor Honda Beat 2023 (No. DD 9012 EF)",
     fotoJaminan: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=400&auto=format&fit=crop&q=80",
+    dataJaminan: {
+      idJaminan: "JMN-20260818-008",
+      nomorPembiayaan: "PB-2026-008",
+      idPeminjam: "PEM-004",
+      namaPeminjam: "Rina Handayani",
+      jenisJaminan: "BPKB Kendaraan",
+      bpkbDetails: {
+        jenisKendaraan: "Motor",
+        merkModel: "Honda Beat Street 2023",
+        nomorPolisi: "DD 9012 EF",
+        nomorBpkb: "BPKB-90123456",
+        fotoBpkb: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=400&auto=format&fit=crop&q=80",
+      },
+      lokasiPenyimpanan: "Brankas Utama Kasir A-1",
+      statusJaminan: "Siap Ambil (Lunas)",
+      tanggalDiterima: "15 Jun 2026",
+      petugasPenerima: "H. Andi Pratama, S.E.",
+    },
   },
 ];
 
