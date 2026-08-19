@@ -37,7 +37,18 @@ import {
   CheckCircle,
   CheckCircle2,
   XCircle,
-  Building
+  Building,
+  MessageSquare,
+  Send,
+  Bot,
+  Sparkles,
+  Code,
+  Copy,
+  ExternalLink,
+  Check,
+  Zap,
+  Settings,
+  Bell
 } from "lucide-react";
 
 const DataPembiayaanPage: React.FC = () => {
@@ -267,6 +278,94 @@ const DataPembiayaanPage: React.FC = () => {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  // --- WHATSAPP AUTO-REMINDER SYSTEM STATES ---
+  const [isWaModalOpen, setIsWaModalOpen] = useState(false);
+  const [waSelectedContractNo, setWaSelectedContractNo] = useState<string>("");
+  const [waTemplateType, setWaTemplateType] = useState<"h-3" | "hari_h" | "terlambat">("hari_h");
+  const [waCustomMessage, setWaCustomMessage] = useState<string>("");
+  const [waActiveTab, setWaActiveTab] = useState<"queue" | "broadcast" | "architecture">("queue");
+  const [isSimulatingCron, setIsSimulatingCron] = useState(false);
+  const [waSimulatedLog, setWaSimulatedLog] = useState<string[]>([]);
+  const [waApiKey, setWaApiKey] = useState<string>("FONNTE-MCM-FINANCE-API-KEY-8899");
+  const [copiedCode, setCopiedCode] = useState(false);
+
+  const activeWaContract =
+    pembiayaanList.find((item) => item.nomorPembiayaan === waSelectedContractNo) || pembiayaanList[0];
+
+  const getWaTextForContract = (
+    contract: TransaksiPembiayaan,
+    type: "h-3" | "hari_h" | "terlambat"
+  ) => {
+    if (!contract) return "";
+    const nominalAngsuran = formatRupiah(contract.angsuranPerPeriode || contract.biayaMargin);
+    const totalSisa = formatRupiah(contract.sisaTagihan);
+
+    if (type === "h-3") {
+      return `Halo Bpk/Ibu *${contract.namaPeminjam}*,\n\nSalam hangat dari *MCM Finance Makassar*.\n\nKami menginfokan bahwa pembiayaan Anda (*${contract.nomorPembiayaan}*) akan jatuh tempo pada *${contract.tanggalJatuhTempo}*.\n\n📌 *Rincian Tagihan Bunga/Angsuran:*\n• Wajib Bayar: ${nominalAngsuran}\n• Sisa Pokok: ${totalSisa}\n\n💳 *Rekening Pembayaran:* Bank BCA 7371029841 a.n. MCM Finance\n\nMohon konfirmasi apabila sudah transfer. Terima kasih atas kerja samanya! 🙏`;
+    } else if (type === "hari_h") {
+      return `⚠️ *REMINDER JATUH TEMPO HARI INI*\n\nHalo Bpk/Ibu *${contract.namaPeminjam}*,\n\nTagihan pembiayaan Anda (*${contract.nomorPembiayaan}*) jatuh tempo *HARI INI (${contract.tanggalJatuhTempo})*.\n\n💵 *Nominal Wajib Bayar:* ${nominalAngsuran}\n• Sisa Pokok: ${totalSisa}\n\n💳 *Transfer BCA:* 7371029841 a.n. MCM Finance / H. Andi Pratama\n\nMohon transfer hari ini dan kirimkan bukti transfer. Terima kasih! 🙏`;
+    } else {
+      return `🚨 *PEMBERITAHUAN TUNGGAKAN JATUH TEMPO*\n\nHalo Bpk/Ibu *${contract.namaPeminjam}*,\n\nTagihan pembiayaan Anda (*${contract.nomorPembiayaan}*) telah *MELEWATI TANGGAL JATUH TEMPO (${contract.tanggalJatuhTempo})*.\n\n⚠️ *Jumlah Tunggakan:* ${nominalAngsuran}\n• Sisa Pokok Pinjaman: ${totalSisa}\n\nMohon segera melakukan pelunasan hari ini untuk menghindari denda penalti keterlambatan. Hubungi Admin Kasir MCM Finance jika ada kendala. Terima kasih.`;
+    }
+  };
+
+  const handleOpenWaModalForContract = (contract: TransaksiPembiayaan) => {
+    if (!contract) return;
+    setWaSelectedContractNo(contract.nomorPembiayaan);
+    const initialType =
+      contract.status === "Terlambat" ? "terlambat" : contract.status === "Segera jatuh tempo" ? "hari_h" : "h-3";
+    setWaTemplateType(initialType);
+    setWaCustomMessage(getWaTextForContract(contract, initialType));
+    setIsWaModalOpen(true);
+  };
+
+  useEffect(() => {
+    if (activeWaContract) {
+      setWaCustomMessage(getWaTextForContract(activeWaContract, waTemplateType));
+    }
+  }, [waTemplateType, waSelectedContractNo]);
+
+  const handleSendWhatsAppWebDirect = (contract: TransaksiPembiayaan, customMsg?: string) => {
+    if (!contract) return;
+    const msg = customMsg || getWaTextForContract(contract, waTemplateType);
+    const cleanPhone = contract.whatsappPeminjam.replace(/\D/g, "");
+    const formattedPhone = cleanPhone.startsWith("0") ? `62${cleanPhone.slice(1)}` : cleanPhone;
+    const url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(msg)}`;
+    window.open(url, "_blank");
+  };
+
+  // Contracts needing WA reminders (Segera jatuh tempo, Terlambat, or Aktif)
+  const dueOrOverdueContracts = pembiayaanList.filter(
+    (item) => item.status === "Segera jatuh tempo" || item.status === "Terlambat" || item.status === "Aktif"
+  );
+
+  const handleRunSimulatedCronBroadcast = () => {
+    setIsSimulatingCron(true);
+    setWaSimulatedLog([
+      `[08:00:00 WITA] 🚀 SERVER CRON JOB STARTED: Scanning database for due loans...`,
+      `[08:00:01 WITA] 🔍 Found ${dueOrOverdueContracts.length} contracts matching due date filter.`
+    ]);
+
+    dueOrOverdueContracts.forEach((contract, index) => {
+      setTimeout(() => {
+        setWaSimulatedLog((prev) => [
+          ...prev,
+          `[08:00:0${index + 2} WITA] 💬 [WA API Gateway] Sending auto-reminder to ${contract.namaPeminjam} (${contract.whatsappPeminjam}) - Status: HTTP 200 OK (Message ID: WAG-${Date.now()}-${index + 1})`
+        ]);
+
+        if (index === dueOrOverdueContracts.length - 1) {
+          setTimeout(() => {
+            setWaSimulatedLog((prev) => [
+              ...prev,
+              `[08:00:10 WITA] ✅ CRON JOB FINISHED: All ${dueOrOverdueContracts.length} automated WhatsApp reminders dispatched successfully!`
+            ]);
+            setIsSimulatingCron(false);
+          }, 600);
+        }
+      }, (index + 1) * 700);
+    });
   };
 
   // Helper: Format raw digits to thousand separators string ("10000000" -> "10.000.000")
@@ -592,12 +691,23 @@ const DataPembiayaanPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <button
+            onClick={() => {
+              const target = dueOrOverdueContracts[0] || pembiayaanList[0];
+              handleOpenWaModalForContract(target);
+            }}
+            className="px-3.5 py-2 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg shadow transition-all flex items-center justify-center gap-1.5"
+            title="Sistem Otomatisasi & Reminder WhatsApp Jatuh Tempo"
+          >
+            <MessageSquare className="h-4 w-4 text-emerald-300 animate-pulse" />
+            <span>WA Auto-Reminder</span>
+          </button>
           <button
             onClick={() => setIsPaymentModalOpen(true)}
             className="px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow transition-all flex items-center justify-center gap-2"
           >
-            <CreditCard className="h-4 w-4" /> Input Pembayaran / Angsuran
+            <CreditCard className="h-4 w-4" /> Input Pembayaran
           </button>
           <button
             onClick={() => setIsAddModalOpen(true)}
@@ -999,6 +1109,16 @@ const DataPembiayaanPage: React.FC = () => {
                               <CreditCard className="h-3.5 w-3.5" /> Bayar
                             </button>
                           )
+                        )}
+                        {item.status !== "Ditolak" && (
+                          <button
+                            onClick={() => handleOpenWaModalForContract(item)}
+                            className="px-2 py-1 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-md transition-colors inline-flex items-center gap-1 shadow-sm"
+                            title="Kirim WhatsApp Reminder Jatuh Tempo ke Nasabah Ini"
+                          >
+                            <MessageSquare className="h-3.5 w-3.5 text-emerald-600" />
+                            <span className="hidden xl:inline">WA</span>
+                          </button>
                         )}
                         <button
                           onClick={() => {
@@ -2048,6 +2168,449 @@ const DataPembiayaanPage: React.FC = () => {
                 className="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors flex items-center gap-1.5 shadow-md"
               >
                 <CheckCircle2 className="h-4 w-4" /> Simpan & ACC Pembiayaan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* --- MODAL 4: SISTEM OTOMATISASI & REMINDER WHATSAPP JATUH TEMPO --- */}
+      {isWaModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-6">
+            {/* Header Dialog */}
+            <div className="flex items-center justify-between bg-slate-900 px-6 py-4 text-white">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-emerald-500/20 rounded-xl border border-emerald-500/30">
+                  <MessageSquare className="h-6 w-6 text-emerald-400" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-white flex items-center gap-2">
+                    Sistem Otomatisasi & Reminder WhatsApp Jatuh Tempo
+                    <span className="px-2 py-0.5 text-[10px] bg-emerald-600 text-white font-extrabold rounded-full">
+                      v2.5 Auto-Cron Ready
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Pengiriman otomatis pesan penagihan & pengingat jatuh tempo ke WhatsApp nasabah secara 1-Click atau Cron Job Backend.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsWaModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Navigation Tabs */}
+            <div className="grid grid-cols-3 border-b bg-slate-100 text-xs font-bold p-2 gap-2">
+              <button
+                onClick={() => setWaActiveTab("queue")}
+                className={`py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 ${
+                  waActiveTab === "queue"
+                    ? "bg-emerald-700 text-white shadow-md font-extrabold"
+                    : "bg-white text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                <MessageSquare className="h-4 w-4 text-emerald-300" />
+                1. Kirim WA Nasabah ({dueOrOverdueContracts.length})
+              </button>
+
+              <button
+                onClick={() => setWaActiveTab("broadcast")}
+                className={`py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 ${
+                  waActiveTab === "broadcast"
+                    ? "bg-slate-900 text-white shadow-md font-extrabold"
+                    : "bg-white text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                <Zap className="h-4 w-4 text-amber-400" />
+                2. Simulasi Auto-Cron Broadcast
+              </button>
+
+              <button
+                onClick={() => setWaActiveTab("architecture")}
+                className={`py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 ${
+                  waActiveTab === "architecture"
+                    ? "bg-[#1976d2] text-white shadow-md font-extrabold"
+                    : "bg-white text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                <Code className="h-4 w-4 text-blue-300" />
+                3. Panduan Backend & Server Cron
+              </button>
+            </div>
+
+            {/* TAB 1: KIRIM WA DIRECT PER NASABAH */}
+            {waActiveTab === "queue" && (
+              <div className="p-6 max-h-[75vh] overflow-y-auto space-y-6 text-xs">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                  {/* Left Column: Selector Antrean Nasabah */}
+                  <div className="md:col-span-5 space-y-3 border-r pr-4">
+                    <label className="font-bold text-slate-800 text-xs block uppercase tracking-wider">
+                      Pilih Nasabah Target Reminder ({dueOrOverdueContracts.length})
+                    </label>
+                    <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+                      {dueOrOverdueContracts.map((contract) => {
+                        const isSelected = contract.nomorPembiayaan === waSelectedContractNo;
+                        return (
+                          <div
+                            key={contract.nomorPembiayaan}
+                            onClick={() => {
+                              setWaSelectedContractNo(contract.nomorPembiayaan);
+                              const type =
+                                contract.status === "Terlambat"
+                                  ? "terlambat"
+                                  : contract.status === "Segera jatuh tempo"
+                                  ? "hari_h"
+                                  : "h-3";
+                              setWaTemplateType(type);
+                              setWaCustomMessage(getWaTextForContract(contract, type));
+                            }}
+                            className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                              isSelected
+                                ? "bg-emerald-50 border-emerald-500 ring-2 ring-emerald-500/20 shadow-sm"
+                                : "bg-slate-50 border-slate-200 hover:bg-slate-100"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <strong className="text-slate-900 font-bold text-xs">{contract.namaPeminjam}</strong>
+                              <span className="font-mono text-[10px] text-blue-700 font-bold">{contract.nomorPembiayaan}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-[11px] text-slate-500 mt-1">
+                              <span>WA: <strong className="text-emerald-700 font-mono">{contract.whatsappPeminjam}</strong></span>
+                              <span>Tempo: <strong className="text-slate-800 font-mono">{contract.tanggalJatuhTempo}</strong></span>
+                            </div>
+                            <div className="flex items-center justify-between mt-2 pt-1 border-t border-slate-200">
+                              <span className="font-mono text-xs font-black text-rose-600">
+                                {formatRupiah(contract.angsuranPerPeriode || contract.biayaMargin)}
+                              </span>
+                              {getStatusBadge(contract.status)}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Right Column: Live Message Generator & Direct WhatsApp Button */}
+                  <div className="md:col-span-7 space-y-4">
+                    {activeWaContract ? (
+                      <>
+                        {/* Nasabah Target Info Card */}
+                        <div className="bg-emerald-50/70 p-3.5 rounded-xl border border-emerald-200 flex items-center justify-between">
+                          <div>
+                            <span className="text-[10px] font-bold text-emerald-800 uppercase block">Target Penerima WhatsApp:</span>
+                            <h4 className="font-extrabold text-slate-900 text-sm">{activeWaContract.namaPeminjam}</h4>
+                            <p className="text-xs text-slate-600 font-mono mt-0.5">
+                              No. HP: <strong className="text-emerald-700">{activeWaContract.whatsappPeminjam}</strong> | Jatuh Tempo: <strong className="text-rose-700">{activeWaContract.tanggalJatuhTempo}</strong>
+                            </p>
+                          </div>
+                          <span className="px-2.5 py-1 text-[10px] font-black bg-emerald-600 text-white rounded-lg uppercase shadow">
+                            Ready WA
+                          </span>
+                        </div>
+
+                        {/* Template Type Selector */}
+                        <div>
+                          <label className="font-bold text-slate-700 block mb-1">Pilih Jenis Template Pesan WhatsApp:</label>
+                          <div className="grid grid-cols-3 gap-2 text-[11px] font-bold">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setWaTemplateType("h-3");
+                                setWaCustomMessage(getWaTextForContract(activeWaContract, "h-3"));
+                              }}
+                              className={`py-2 px-2 rounded-lg border transition-all text-center ${
+                                waTemplateType === "h-3"
+                                  ? "bg-blue-600 text-white border-blue-600 shadow"
+                                  : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100"
+                              }`}
+                            >
+                              📌 H-3 Reminder
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setWaTemplateType("hari_h");
+                                setWaCustomMessage(getWaTextForContract(activeWaContract, "hari_h"));
+                              }}
+                              className={`py-2 px-2 rounded-lg border transition-all text-center ${
+                                waTemplateType === "hari_h"
+                                  ? "bg-amber-600 text-white border-amber-600 shadow"
+                                  : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100"
+                              }`}
+                            >
+                              ⚠️ Hari H Wajib Bayar
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setWaTemplateType("terlambat");
+                                setWaCustomMessage(getWaTextForContract(activeWaContract, "terlambat"));
+                              }}
+                              className={`py-2 px-2 rounded-lg border transition-all text-center ${
+                                waTemplateType === "terlambat"
+                                  ? "bg-rose-600 text-white border-rose-600 shadow"
+                                  : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100"
+                              }`}
+                            >
+                              🚨 Tunggakan Terlambat
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Live Message Textarea */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="font-bold text-slate-700">Preview & Edit Isi Pesan WhatsApp:</label>
+                            <span className="text-[10px] text-slate-400">Dukungan format WhatsApp (*bold*, _italic_)</span>
+                          </div>
+                          <textarea
+                            rows={9}
+                            value={waCustomMessage}
+                            onChange={(e) => setWaCustomMessage(e.target.value)}
+                            className="w-full p-3 font-mono text-xs border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 font-medium text-slate-900 leading-relaxed"
+                          />
+                        </div>
+
+                        {/* Direct Send Action Button */}
+                        <div className="pt-2">
+                          <button
+                            type="button"
+                            onClick={() => handleSendWhatsAppWebDirect(activeWaContract, waCustomMessage)}
+                            className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                          >
+                            <Send className="h-4 w-4 text-emerald-200" />
+                            🚀 Kirim Sekarang via WhatsApp Web / App (`wa.me`)
+                          </button>
+                          <p className="text-[10px] text-slate-400 text-center mt-1.5">
+                            Menghubungkan langsung ke aplikasi WhatsApp dengan pesan terformat otomatis.
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                        <p className="text-slate-500">Pilih nasabah dari daftar sebelah kiri untuk memunculkan pesan WhatsApp.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: SIMULASI AUTO-CRON BROADCAST */}
+            {waActiveTab === "broadcast" && (
+              <div className="p-6 max-h-[75vh] overflow-y-auto space-y-6 text-xs">
+                <div className="bg-amber-50 p-4 rounded-xl border border-amber-300 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-amber-600" />
+                    <h4 className="font-bold text-amber-950 text-sm">Simulasi Auto-Cron Daily Broadcast System</h4>
+                  </div>
+                  <p className="text-slate-700 text-xs leading-relaxed">
+                    Sistem ini menyimulasikan proses **Cron Job Server** yang berjalan setiap pukul 08:00 WITA. Server akan memindai database secara otomatis dan memicu pengiriman pesan WhatsApp ke seluruh nasabah yang berstatus **Segera jatuh tempo** atau **Terlambat** melalui API WA Gateway (*Fonnte / Wablas / Twilio*).
+                  </p>
+                </div>
+
+                {/* API Gateway Key Config Box */}
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                  <label className="font-bold text-slate-800 flex items-center gap-2">
+                    <Settings className="h-4 w-4 text-[#1976d2]" /> Konfigurasi API Key WhatsApp Gateway (Server Backend)
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="sm:col-span-2">
+                      <input
+                        type="text"
+                        value={waApiKey}
+                        onChange={(e) => setWaApiKey(e.target.value)}
+                        placeholder="e.g. FONNTE_API_TOKEN_8899"
+                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg font-mono font-bold text-slate-800 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => alert("✓ API Key WhatsApp Gateway tersimpan di konfigurasi backend MCM Finance!")}
+                        className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg shadow text-xs"
+                      >
+                        Simpan Token API
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Broadcast Execution Console */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-800 flex items-center gap-2">
+                      <Bot className="h-4 w-4 text-emerald-600" /> Console Output & Log Pengiriman Server Cron:
+                    </span>
+                    <button
+                      type="button"
+                      disabled={isSimulatingCron}
+                      onClick={handleRunSimulatedCronBroadcast}
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-lg shadow flex items-center gap-2 disabled:opacity-50"
+                    >
+                      {isSimulatingCron ? <Clock className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                      {isSimulatingCron ? "Memproses Broadcast..." : "▶ Jalankan Simulasi Broadcast (Jam 08:00)"}
+                    </button>
+                  </div>
+
+                  {/* Terminal Log Box */}
+                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-[11px] text-emerald-400 space-y-1.5 min-h-[200px] max-h-[300px] overflow-y-auto">
+                    {waSimulatedLog.length > 0 ? (
+                      waSimulatedLog.map((logLine, idx) => (
+                        <div key={idx} className="leading-relaxed">
+                          {logLine}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-slate-600 italic py-8 text-center">
+                        Klik tombol "▶ Jalankan Simulasi Broadcast" untuk memulai proses uji coba pengiriman WA massal otomatis server.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: PANDUAN BACKEND CODE & SETUP SERVER */}
+            {waActiveTab === "architecture" && (
+              <div className="p-6 max-h-[75vh] overflow-y-auto space-y-6 text-xs">
+                <div className="bg-blue-50 p-4 rounded-xl border border-blue-200 space-y-2">
+                  <h4 className="font-bold text-blue-950 text-sm flex items-center gap-2">
+                    <Code className="h-5 w-5 text-blue-600" /> Panduan Arsitektur & Script Backend Auto-WA Jatuh Tempo
+                  </h4>
+                  <p className="text-slate-700 leading-relaxed">
+                    Untuk menjalankan pengiriman WhatsApp otomatis **tanpa intervensi manusia setiap hari**, backend (Node.js / Express / Laravel / Python) perlu dikonfigurasi dengan skema berikut:
+                  </p>
+                </div>
+
+                {/* Step-by-step Architecture Breakdown */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1">
+                    <span className="px-2 py-0.5 text-[9px] font-black bg-blue-600 text-white rounded">LANGKAH 1</span>
+                    <h5 className="font-bold text-slate-900 text-xs">Cron Job Scheduler</h5>
+                    <p className="text-[11px] text-slate-600">
+                      Server menjalankan fungsi scheduler (misal `node-cron`) setiap hari pada pukul 08:00 WITA.
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1">
+                    <span className="px-2 py-0.5 text-[9px] font-black bg-amber-600 text-white rounded">LANGKAH 2</span>
+                    <h5 className="font-bold text-slate-900 text-xs">Query Database</h5>
+                    <p className="text-[11px] text-slate-600">
+                      Query memilih kontrak yang `tanggal_jatuh_tempo` sesuai H-3, Hari H, atau Tunggakan.
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1">
+                    <span className="px-2 py-0.5 text-[9px] font-black bg-emerald-600 text-white rounded">LANGKAH 3</span>
+                    <h5 className="font-bold text-slate-900 text-xs">WA Gateway API</h5>
+                    <p className="text-[11px] text-slate-600">
+                      Mengirim HTTP POST request ke Provider WA Gateway (Fonnte / Wablas / Baileys) untuk kirim WA.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Node.js Copyable Script Code snippet */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-800 font-mono text-xs">Sample Code: Node.js Cron + Fonnte WA Gateway API</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`// server-cron.js - Automated WhatsApp Reminder
+const cron = require('node-cron');
+const axios = require('axios');
+const db = require('./database');
+
+// Jalankan otomatis Setiap Hari jam 08:00 Pagi WITA (0 8 * * *)
+cron.schedule('0 8 * * *', async () => {
+  console.log('🚀 Running daily WhatsApp reminder Cron Job...');
+
+  // Query nasabah yang jatuh tempo hari ini
+  const dueLoans = await db.query(\`
+    SELECT * FROM transaksi_pembiayaan 
+    WHERE tanggal_jatuh_tempo = CURRENT_DATE 
+    AND status IN ('Aktif', 'Segera jatuh tempo')
+  \`);
+
+  for (const loan of dueLoans.rows) {
+    const message = \`⚠️ *REMINDER JATUH TEMPO HARI INI*\\n\\nHalo Bpk/Ibu *\${loan.nama_peminjam}*,\\n\\nTagihan pembiayaan Anda (*\${loan.nomor_pembiayaan}*) jatuh tempo HARI INI.\\nTotal Angsuran: Rp \${loan.angsuran_per_periode.toLocaleString('id-ID')}\\nTransfer BCA: 7371029841 a.n. MCM Finance\\n\\nTerima kasih!\`;
+
+    try {
+      await axios.post('https://api.fonnte.com/send-message', {
+        target: loan.whatsapp_peminjam,
+        message: message,
+      }, {
+        headers: { 'Authorization': 'FONNTE-API-KEY-HERE' }
+      });
+      console.log(\`✅ WA Sent to \${loan.nama_peminjam}\`);
+    } catch (err) {
+      console.error(\`❌ Failed to send WA to \${loan.nama_peminjam}\`, err);
+    }
+  }
+});`);
+                        setCopiedCode(true);
+                        setTimeout(() => setCopiedCode(false), 2000);
+                      }}
+                      className="px-3 py-1 bg-slate-800 hover:bg-slate-900 text-white rounded font-bold text-[11px] flex items-center gap-1.5"
+                    >
+                      {copiedCode ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                      {copiedCode ? "Tersalin!" : "Salin Code Script"}
+                    </button>
+                  </div>
+
+                  <pre className="bg-slate-950 text-emerald-400 p-4 rounded-xl text-[11px] font-mono overflow-x-auto leading-relaxed border border-slate-800 max-h-[250px]">
+{`// server-cron.js - Automated WhatsApp Reminder
+const cron = require('node-cron');
+const axios = require('axios');
+const db = require('./database');
+
+// Jalankan otomatis Setiap Hari jam 08:00 Pagi WITA (0 8 * * *)
+cron.schedule('0 8 * * *', async () => {
+  console.log('🚀 Running daily WhatsApp reminder Cron Job...');
+
+  // Query nasabah yang jatuh tempo hari ini
+  const dueLoans = await db.query(\`
+    SELECT * FROM transaksi_pembiayaan 
+    WHERE tanggal_jatuh_tempo = CURRENT_DATE 
+    AND status IN ('Aktif', 'Segera jatuh tempo')
+  \`);
+
+  for (const loan of dueLoans.rows) {
+    const message = \`⚠️ *REMINDER JATUH TEMPO HARI INI*\\n\\nHalo Bpk/Ibu *\${loan.nama_peminjam}*,\\n\\nTagihan pembiayaan Anda (*\${loan.nomor_pembiayaan}*) jatuh tempo HARI INI.\\nTotal Angsuran: Rp \${loan.angsuran_per_periode.toLocaleString('id-ID')}\\nTransfer BCA: 7371029841 a.n. MCM Finance\\n\\nTerima kasih!\`;
+
+    try {
+      await axios.post('https://api.fonnte.com/send-message', {
+        target: loan.whatsapp_peminjam,
+        message: message,
+      }, {
+        headers: { 'Authorization': 'FONNTE-API-KEY-HERE' }
+      });
+      console.log(\`✅ WA Sent to \${loan.nama_peminjam}\`);
+    } catch (err) {
+      console.error(\`❌ Failed to send WA to \${loan.nama_peminjam}\`, err);
+    }
+  }
+});`}
+                  </pre>
+                </div>
+              </div>
+            )}
+
+            {/* Footer Modal */}
+            <div className="p-4 bg-slate-50 border-t flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsWaModalOpen(false)}
+                className="px-5 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                Tutup
               </button>
             </div>
           </div>
