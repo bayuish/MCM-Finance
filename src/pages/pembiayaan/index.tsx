@@ -2516,88 +2516,103 @@ const DataPembiayaanPage: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Free Baileys Option Banner */}
+                <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-300 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h5 className="font-extrabold text-emerald-950 text-xs uppercase tracking-wider flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-emerald-600" /> OPSI 100% GRATIS (Self-Hosted Bot Baileys / whatsapp-web.js)
+                    </h5>
+                    <span className="px-2 py-0.5 text-[9px] font-black bg-emerald-700 text-white rounded uppercase">
+                      0 Rupiah / Tanpa Berlangganan
+                    </span>
+                  </div>
+                  <p className="text-slate-700 text-[11px] leading-relaxed">
+                    Jika Anda tidak ingin membayar biaya berlangganan WA Gateway, Anda dapat menggunakan library Open Source **Baileys (`@whiskeysockets/baileys`)** atau **`whatsapp-web.js`**. Cukup jalankan script di komputer kasir/laptop yang terhubung internet, scan QR Code sekali, dan pesan WA jatuh tempo akan dikirimkan otomatis **100% GRATIS** menggunakan nomor WhatsApp bisnis kasir Anda!
+                  </p>
+                </div>
+
                 {/* Node.js Copyable Script Code snippet */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-800 font-mono text-xs">Sample Code: Node.js Cron + Fonnte WA Gateway API</span>
+                    <span className="font-bold text-slate-800 font-mono text-xs">Sample Code: Node.js Cron + Baileys (100% Free WhatsApp Bot)</span>
                     <button
                       type="button"
                       onClick={() => {
-                        navigator.clipboard.writeText(`// server-cron.js - Automated WhatsApp Reminder
+                        navigator.clipboard.writeText(`// free-wa-bot.js - 100% Free Self-Hosted WhatsApp Auto Reminder
+const { makeWASocket, useMultiFileAuthState } = require('@whiskeysockets/baileys');
 const cron = require('node-cron');
-const axios = require('axios');
 const db = require('./database');
 
-// Jalankan otomatis Setiap Hari jam 08:00 Pagi WITA (0 8 * * *)
-cron.schedule('0 8 * * *', async () => {
-  console.log('🚀 Running daily WhatsApp reminder Cron Job...');
+async function connectToWhatsApp() {
+  const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
+  const sock = makeWASocket({ auth: state, printQRInTerminal: true });
+  sock.ev.on('creds.update', saveCreds);
 
-  // Query nasabah yang jatuh tempo hari ini
-  const dueLoans = await db.query(\`
-    SELECT * FROM transaksi_pembiayaan 
-    WHERE tanggal_jatuh_tempo = CURRENT_DATE 
-    AND status IN ('Aktif', 'Segera jatuh tempo')
-  \`);
-
-  for (const loan of dueLoans.rows) {
-    const message = \`⚠️ *REMINDER JATUH TEMPO HARI INI*\\n\\nHalo Bpk/Ibu *\${loan.nama_peminjam}*,\\n\\nTagihan pembiayaan Anda (*\${loan.nomor_pembiayaan}*) jatuh tempo HARI INI.\\nTotal Angsuran: Rp \${loan.angsuran_per_periode.toLocaleString('id-ID')}\\nTransfer BCA: 7371029841 a.n. MCM Finance\\n\\nTerima kasih!\`;
-
-    try {
-      await axios.post('https://api.fonnte.com/send-message', {
-        target: loan.whatsapp_peminjam,
-        message: message,
-      }, {
-        headers: { 'Authorization': 'FONNTE-API-KEY-HERE' }
-      });
-      console.log(\`✅ WA Sent to \${loan.nama_peminjam}\`);
-    } catch (err) {
-      console.error(\`❌ Failed to send WA to \${loan.nama_peminjam}\`, err);
+  sock.ev.on('connection.update', (update) => {
+    if (update.connection === 'open') {
+      console.log('✅ WA Bot Connected & Ready!');
     }
-  }
-});`);
+  });
+
+  // Schedule Cron Job Setiap Pagi Jam 08:00 WITA (08:00 AM)
+  cron.schedule('0 8 * * *', async () => {
+    console.log('🚀 Running 100% Free Automated WA Reminders...');
+    const dueLoans = await db.query("SELECT * FROM pembiayaan WHERE tanggal_jatuh_tempo = CURRENT_DATE");
+
+    for (const loan of dueLoans.rows) {
+      const waNum = loan.whatsapp.replace(/\\D/g, '').replace(/^0/, '62') + '@s.whatsapp.net';
+      const msg = \`⚠️ *REMINDER JATUH TEMPO HARI INI*\\n\\nHalo Bpk/Ibu *\${loan.nama}*,\\nTagihan pembiayaan *\${loan.nomor_pembiayaan}* jatuh tempo hari ini.\\nNominal: Rp \${loan.angsuran.toLocaleString('id-ID')}\\nTransfer BCA: 7371029841 a.n. MCM Finance\\n\\nTerima kasih!\`;
+
+      await sock.sendMessage(waNum, { text: msg });
+      console.log(\`✅ Free WA Sent to \${loan.nama}\`);
+    }
+  });
+}
+
+connectToWhatsApp();`);
                         setCopiedCode(true);
                         setTimeout(() => setCopiedCode(false), 2000);
                       }}
                       className="px-3 py-1 bg-slate-800 hover:bg-slate-900 text-white rounded font-bold text-[11px] flex items-center gap-1.5"
                     >
                       {copiedCode ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-                      {copiedCode ? "Tersalin!" : "Salin Code Script"}
+                      {copiedCode ? "Tersalin!" : "Salin Code Script Free Bot"}
                     </button>
                   </div>
 
-                  <pre className="bg-slate-950 text-emerald-400 p-4 rounded-xl text-[11px] font-mono overflow-x-auto leading-relaxed border border-slate-800 max-h-[250px]">
-{`// server-cron.js - Automated WhatsApp Reminder
+                  <pre className="bg-slate-950 text-emerald-400 p-4 rounded-xl text-[11px] font-mono overflow-x-auto leading-relaxed border border-slate-800 max-h-[260px]">
+{`// free-wa-bot.js - 100% Free Self-Hosted WhatsApp Auto Reminder (Baileys)
+const { makeWASocket, useMultiFileAuthState } = require('@whiskeysockets/baileys');
 const cron = require('node-cron');
-const axios = require('axios');
 const db = require('./database');
 
-// Jalankan otomatis Setiap Hari jam 08:00 Pagi WITA (0 8 * * *)
-cron.schedule('0 8 * * *', async () => {
-  console.log('🚀 Running daily WhatsApp reminder Cron Job...');
+async function connectToWhatsApp() {
+  const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
+  const sock = makeWASocket({ auth: state, printQRInTerminal: true });
+  sock.ev.on('creds.update', saveCreds);
 
-  // Query nasabah yang jatuh tempo hari ini
-  const dueLoans = await db.query(\`
-    SELECT * FROM transaksi_pembiayaan 
-    WHERE tanggal_jatuh_tempo = CURRENT_DATE 
-    AND status IN ('Aktif', 'Segera jatuh tempo')
-  \`);
-
-  for (const loan of dueLoans.rows) {
-    const message = \`⚠️ *REMINDER JATUH TEMPO HARI INI*\\n\\nHalo Bpk/Ibu *\${loan.nama_peminjam}*,\\n\\nTagihan pembiayaan Anda (*\${loan.nomor_pembiayaan}*) jatuh tempo HARI INI.\\nTotal Angsuran: Rp \${loan.angsuran_per_periode.toLocaleString('id-ID')}\\nTransfer BCA: 7371029841 a.n. MCM Finance\\n\\nTerima kasih!\`;
-
-    try {
-      await axios.post('https://api.fonnte.com/send-message', {
-        target: loan.whatsapp_peminjam,
-        message: message,
-      }, {
-        headers: { 'Authorization': 'FONNTE-API-KEY-HERE' }
-      });
-      console.log(\`✅ WA Sent to \${loan.nama_peminjam}\`);
-    } catch (err) {
-      console.error(\`❌ Failed to send WA to \${loan.nama_peminjam}\`, err);
+  sock.ev.on('connection.update', (update) => {
+    if (update.connection === 'open') {
+      console.log('✅ WA Bot Connected & Ready!');
     }
-  }
-});`}
+  });
+
+  // Schedule Cron Job Setiap Pagi Jam 08:00 WITA (08:00 AM)
+  cron.schedule('0 8 * * *', async () => {
+    console.log('🚀 Running 100% Free Automated WA Reminders...');
+    const dueLoans = await db.query("SELECT * FROM pembiayaan WHERE tanggal_jatuh_tempo = CURRENT_DATE");
+
+    for (const loan of dueLoans.rows) {
+      const waNum = loan.whatsapp.replace(/\\D/g, '').replace(/^0/, '62') + '@s.whatsapp.net';
+      const msg = \`⚠️ *REMINDER JATUH TEMPO HARI INI*\\n\\nHalo Bpk/Ibu *\${loan.nama}*,\\nTagihan pembiayaan *\${loan.nomor_pembiayaan}* jatuh tempo hari ini.\\nNominal: Rp \${loan.angsuran.toLocaleString('id-ID')}\\nTransfer BCA: 7371029841 a.n. MCM Finance\\n\\nTerima kasih!\`;
+
+      await sock.sendMessage(waNum, { text: msg });
+      console.log(\`✅ Free WA Sent to \${loan.nama}\`);
+    }
+  });
+}
+
+connectToWhatsApp();`}
                   </pre>
                 </div>
               </div>
